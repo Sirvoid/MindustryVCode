@@ -1,20 +1,8 @@
+const opParser = require('operationParser');
+
 let curLineI;
 let curLine;
 let curScope;
-
-const operationCode = {
-	'+': 'add', 
-	'-': 'sub', 
-	'*': 'mul',
-	'^': 'pow',
-	'//': 'idiv', 
-	'/': 'div', 
-	'%': 'mod', 
-	'>>': 'shr', 
-	'<<': 'shl,', 
-	'&': 'and', 
-	'|': 'or'
-};
 
 const conditionCode = {
 	'===': 'strictEqual', 
@@ -128,38 +116,12 @@ const parseVar = () => {
 	let expressions = curLine.split('=');
 	let varName = expressions[0].trim();
 	
-	let curOp = 'set';
-	
-	for(let op in operationCode) {
-		let indexOp = expressions[1].indexOf(op);
-		if(indexOp != -1) {
-			curOp = op;
-			break;
-		}
-	}
-	
-	if(curOp != 'set') {
-	
-		let values = expressions[1].split(curOp);
-		let val1 = values[0].trim();
-		let val2 = values[1].trim();
-		
-		curScope.content.push({
-			varName: varName, 
-			operation: [
-				'op ' + operationCode[curOp], 
-				val1,
-				val2
-			]
-		});
-		
-	} else {
-		let val1 = expressions[1].trim();
-		curScope.content.push({
-			varName: varName, 
-			operation: ['set', val1]
-		});
-	}
+	let operations = opParser.parse(expressions[1], varName);
+
+	curScope.content.push({
+		varName: varName, 
+		operations: operations
+	});
 	
 };
 

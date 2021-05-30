@@ -104,10 +104,8 @@ const callAsm = () => {
 };
 
 const varAsm = () => {
-	let operation = readContent.operation;
-	code.push(
-		operation[0] + ' ' + readContent.varName + ' ' + operation[1] + (operation[2] ? ' ' + operation[2] : '')
-	);
+	let operations = readContent.operations;
+	code = code.concat(operations);
 };
 
 const tokenFunc = {

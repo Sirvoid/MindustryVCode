@@ -14,6 +14,8 @@ module.exports.compile = (code) => {
 		print('Parser error: ' + e + ' ' + error);
 	}
 	
+	if(!ast) print('Couldn\'t parse');
+	
 	if(ast) {
 		try { 
 			codeResult = assembler.assemble(ast);
