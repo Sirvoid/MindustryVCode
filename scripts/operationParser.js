@@ -15,19 +15,25 @@ module.exports.parse = (tokenStr, varName) => {
 
 	//Operators definition
 	let opDef = {
-		'^': { pre: 4, asc: 'right', code: 'pow'},
 		'*': { pre: 3, asc: 'left', code: 'mul'},
 		'/': { pre: 3, asc: 'left', code: 'div'},
 		'//': { pre: 3, asc: 'left', code: 'idiv'},
 		'%': { pre: 3, asc: 'left', code: 'mod'},
-		'<': { pre: 2, asc: 'left'},
-		'>': { pre: 2, asc: 'left'},
 		'<<': { pre: 2, asc: 'left', code: 'shl'},
 		'>>': { pre: 2, asc: 'left', code: 'shr'},
 		'|': { pre: 2, asc: 'left', code: 'or'},
+		'^': { pre: 2, asc: 'left', code: 'xor'},
 		'&': { pre: 2, asc: 'left', code: 'and'},
 		'+': { pre: 2, asc: 'left', code: 'add'},
-		'-': { pre: 2, asc: 'left', code: 'sub'}
+		'-': { pre: 2, asc: 'left', code: 'sub'},
+		'==': { pre: 1, asc: 'left', code: 'equal'},
+		'!=': { pre: 1, asc: 'left', code: 'notEqual'},
+		'===': { pre: 1, asc: 'left', code: 'strictEqual'},
+		'<': { pre: 1, asc: 'left', code: 'lessThan'},
+		'<=': { pre: 1, asc: 'left', code: 'lessThanEq'},
+		'>': { pre: 1, asc: 'left', code: 'greaterThan'},
+		'>=': { pre: 1, asc: 'left', code: 'greaterThanEq'},
+		'&&': { pre: 1, asc: 'left', code: 'land'}
 	};
 
 	//Math functions definition
@@ -39,8 +45,16 @@ module.exports.parse = (tokenStr, varName) => {
 		'floor': 1,
 		'ceil': 1,
 		'round': 1,
+		'abs': 1,
+		'log': 1,
+		'log10': 1,
+		'rand': 1,
 		'max': 2,
-		'min': 2
+		'min': 2,
+		'noise': 2,
+		'len': 2,
+		'angle': 2,
+		'pow': 2
 	};
 
 	//---Get tokens---

@@ -3,7 +3,7 @@
 	"displayName": "VCode Compiler",
 	"author": "Sirvoid",
 	"description": "Compiler for a mindustry programming language.\nTokens:\nfunc,call,if,while,break,end,cmd\nSee example: https://pastebin.com/3vTgba6k",
-	"version": "0.2.0",
+	"version": "0.2.1",
 	"minGameVersion": 108,
 	"dependencies": ["override-lib"],
 	"hidden": true
