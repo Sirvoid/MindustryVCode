@@ -114,9 +114,10 @@ const parseEnd = () => {
 
 const parseVar = () => {
 	let expressions = curLine.split('=');
-	let varName = expressions[0].trim();
+	let varName = expressions.shift();
+	let mathExp = expressions.join('=');
 	
-	let operations = opParser.parse(expressions[1], varName);
+	let operations = opParser.parse(mathExp, varName);
 
 	curScope.content.push({
 		varName: varName, 

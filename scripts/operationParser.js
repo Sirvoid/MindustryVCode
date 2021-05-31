@@ -26,6 +26,7 @@ module.exports.parse = (tokenStr, varName) => {
 		'&': { pre: 2, asc: 'left', code: 'and'},
 		'+': { pre: 2, asc: 'left', code: 'add'},
 		'-': { pre: 2, asc: 'left', code: 'sub'},
+		'=': { pre: 1, asc: 'left', code: 'equal'},
 		'==': { pre: 1, asc: 'left', code: 'equal'},
 		'!=': { pre: 1, asc: 'left', code: 'notEqual'},
 		'===': { pre: 1, asc: 'left', code: 'strictEqual'},
