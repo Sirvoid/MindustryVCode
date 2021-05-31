@@ -1,9 +1,20 @@
-module.exports.parse = (operationStr, varName) => {
+module.exports.parse = (tokenStr, varName) => {
+	tokenStr = tokenStr.replace(/\s/g, '');
 
-	operationStr = operationStr.replace(/\s/g, '');
-	let operationArr = [];
+	let tokenArr = []; //token array
+	let opStack = []; //operator stack
+	let output = []; //output stack
+	let instructions = []; //Final instructions
+	let vCnt = 0; //Temp variables count
 
-	let opPre = {
+	let tokenToAdd = ''; //Current token generated
+	let addToken = () => {
+		tokenArr.push(tokenToAdd);
+		tokenToAdd = '';
+	};
+
+	//Operators definition
+	let opDef = {
 		'^': { pre: 4, asc: 'right', code: 'pow'},
 		'*': { pre: 3, asc: 'left', code: 'mul'},
 		'/': { pre: 3, asc: 'left', code: 'div'},
@@ -19,7 +30,8 @@ module.exports.parse = (operationStr, varName) => {
 		'-': { pre: 2, asc: 'left', code: 'sub'}
 	};
 
-	let fnc = {
+	//Math functions definition
+	let funcDef = {
 		'sin': 1,
 		'cos': 1,
 		'tan': 1,
@@ -31,63 +43,61 @@ module.exports.parse = (operationStr, varName) => {
 		'min': 2
 	};
 
-	let tokenToAdd = '';
-	for(let i = 0; i < operationStr.length; i++) {
-		let chara = operationStr[i];
-		let nextChara = operationStr[i + 1];
-		let prevChara = operationStr[i - 1];
-	
+	//---Get tokens---
+	for(let i = 0; i < tokenStr.length; i++) {
+		let chara = tokenStr[i];
+		let nextChar = tokenStr[i + 1];
+		let prevChar = tokenStr[i - 1];
+
 		tokenToAdd += chara;
 		
+		//Fix for negative numbers
 		if(chara == '-' && i == 0) continue;
-		if(chara == '-' && (opPre[prevChara] || prevChara == '(')) continue;
-		
-		if(nextChara == '-') {
-			operationArr.push(tokenToAdd);
-			tokenToAdd = '';
+		if(chara == '-' && (opDef[prevChar] || prevChar == '(')) continue;
+		if(nextChar == '-') {
+			addToken();
 			continue;
 		}
 		
-		if(chara == '(' || chara == ')' || chara == ',' || nextChara == ',') {
-			operationArr.push(tokenToAdd);
-			tokenToAdd = '';
-		} else if(fnc[tokenToAdd] && nextChara == '(') {
-			operationArr.push(tokenToAdd);
-			tokenToAdd = '';
-		} else if(opPre[tokenToAdd] && nextChara == '(') {
-			operationArr.push(tokenToAdd);
-			tokenToAdd = '';
-		} else if(opPre[nextChara] && !opPre[chara]) {
-			operationArr.push(tokenToAdd);
-			tokenToAdd = '';
-		} else if(opPre[chara] && !opPre[nextChara]) {
-			operationArr.push(tokenToAdd);
-			tokenToAdd = '';
-		} else if(nextChara == '(' || nextChara == ')') {
-			operationArr.push(tokenToAdd);
-			tokenToAdd = '';
+		if(chara == '(' || chara == ')' || chara == ',' || nextChar == ',') {
+			addToken();
+		} else if(funcDef[tokenToAdd] && nextChar == '(') {
+			addToken();
+		} else if(opDef[tokenToAdd] && nextChar == '(') {
+			addToken();
+		} else if(opDef[nextChar] && !opDef[chara]) {
+			addToken();
+		} else if(opDef[chara] && !opDef[nextChar]) {
+			addToken();
+		} else if(nextChar == '(' || nextChar == ')') {
+			addToken();
 		}
 		
 	}
 
-	if(tokenToAdd) operationArr.push(tokenToAdd);
+	if(tokenToAdd) addToken(); //Add remaining token
 
-	let opStack = [];
-	let output = [];
 
-	for(let i = 0; i < operationArr.length; i++) {
-		let token = operationArr[i];
-		let number = parseFloat(token) || (!opPre[token] && !fnc[token] && token != '(' && token != ')');
+	//---Order tokens---
+	for(let i = 0; i < tokenArr.length; i++) {
+		let token = tokenArr[i];
+		let number = parseFloat(token) || (!opDef[token] && !funcDef[token] && token != '(' && token != ')');
 		
 		if(token == ',') continue;
 		
-		if(opPre[token]) {
-			while(
-				opStack[0] && 
-				opPre[token] &&
-				opStack[0] != '(' && 
-				(opPre[opStack[0]].pre > opPre[token].pre || (opPre[opStack[0]].pre == opPre[token].pre && opPre[token].asc == 'left'))
-			) {
+		let opToOutCondition = () => {
+			let opOnTop = opStack[0];
+			let defExist = opDef[token];
+			let leftPar = opStack[0] == '(';
+			if(!opOnTop || !defExist || leftPar) return false;
+			let stackGreaterPre = opDef[opStack[0]].pre > opDef[token].pre;
+			let stackEqualPre = opDef[opStack[0]].pre == opDef[token].pre;
+			let tokenAscLeft = opDef[token].asc == 'left';
+			return stackGreaterPre || ( stackEqualPre && tokenAscLeft);
+		};
+		
+		if(opDef[token]) {
+			while(opToOutCondition()) {
 				output.push(opStack.shift());
 			}
 			opStack.unshift(token);
@@ -102,7 +112,7 @@ module.exports.parse = (operationStr, varName) => {
 			if(opStack[0] == '(') {
 				opStack.shift();
 			} 
-			if(fnc[opStack[0]]) {
+			if(funcDef[opStack[0]]) {
 				output.push(opStack.shift());
 			}
 		} else {
@@ -115,37 +125,38 @@ module.exports.parse = (operationStr, varName) => {
 		output.push(opStack.shift());
 	}
 
-	let ops = [];
-
-	let vCnt = 0;
-
+	//---Generate instructions---
 	while(output[1]) {
 		for(let i = 0; i < output.length; i++) {
 			let token = output[i];
-			let isNumberOrVar = parseFloat(token) || (!opPre[token] && !fnc[token] && token != '(' && token != ')');
+			let isNumberOrVar = parseFloat(token) || (!opDef[token] && !funcDef[token] && token != '(' && token != ')');
 			if(!isNumberOrVar) {
+			
 				let tempVar = '_TEMP_OP_' + ++vCnt;
 				
-				let nbParams = fnc[token] || 2;
+				let nbParams = funcDef[token] || 2;
+				let opName = opDef[token] ? opDef[token].code : token;
 				
-				let strOp = 'op ' + (opPre[token] ? opPre[token].code : token) + ' ' + tempVar;
+				let strOp = 'op ' + opName + ' ' + tempVar;
 				
 				for(let j = nbParams; j > 0; j--) {
 					strOp += ' ' + output[i - j];
 				}
 				
-				ops.push(strOp);
+				instructions.push(strOp);
 				output.splice(i - nbParams, 1 + nbParams, tempVar);
 				break;
 			}
 		}
 	}
 
-	if(ops.length == 0) {
-		ops.push('set ' + varName + ' ' + operationStr);
+	if(instructions.length == 0) {
+		instructions.push('set ' + varName + ' ' + tokenStr);
 	} else {
-		ops[ops.length - 1] = ops[ops.length - 1].replace('_TEMP_OP_' + vCnt, varName);
+		//Replace temp var with var assigned to
+		let lastIndex = instructions.length - 1;
+		instructions[lastIndex] = instructions[lastIndex].replace('_TEMP_OP_' + vCnt, varName);
 	}
 	
-	return ops;
+	return instructions;
 };
