@@ -4,16 +4,6 @@ let curLineI;
 let curLine;
 let curScope;
 
-const conditionCode = {
-	'===': 'strictEqual', 
-	'==': 'equal', 
-	'<=': 'lessThanEq', 
-	'>=': 'greaterThanEq', 
-	'<': 'lessThan', 
-	'>': 'greaterThan', 
-	'!=': 'notEqual'
-};
-
 const getLineParam = (curLine) => {
 	let lineArr = curLine.split(' ');
 	lineArr.shift();
@@ -24,7 +14,7 @@ const parse = (code) => {
 	
 	let ast = [{
 		parent: null, 
-		funcName: '_program', 
+		funcName: '___program', 
 		content: [],
 		i:-1
 	}];
@@ -66,22 +56,12 @@ const parseCondition = (type) => {
 	let condition = getLineParam(curLine);
 	let curOp = '';
 	
-	for(let op in conditionCode) {
-		let indexOp = condition.indexOf(op);
-		if(indexOp != -1) {
-			curOp = op;
-			break;
-		}
-	}
-	
-	let values = condition.split(curOp);
-	let val1 = values[0].trim();
-	let val2 = values[1].trim();
+	let operations = opParser.parse(condition, '__condition_result');
 	
 	let newScope = {
 		parent: curScope,
 		conditionType: type, 
-		condition:[conditionCode[curOp], val1, val2], 
+		operations:operations, 
 		content: [],
 		i:-1
 	};
@@ -92,6 +72,14 @@ const parseCondition = (type) => {
 
 const parseBreak = () => {
 	curScope.content.push({'break': 'break'});
+};
+
+const parseContinue = () => {
+	curScope.content.push({'continue': 'continue'});
+};
+
+const parseReturn = () => {
+	curScope.content.push({'return': 'return'});
 };
 
 const parseCall = () => {
@@ -139,7 +127,9 @@ const tokenFunc = {
 	'call': parseCall,
 	'if': parseIf,
 	'while': parseWhile,
-	'break': parseBreak
+	'break': parseBreak,
+	'continue': parseContinue,
+	'return': parseReturn
 };
 
 module.exports.parse = parse;

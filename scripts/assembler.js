@@ -33,8 +33,8 @@ const assemble = (ast) => {
 };
 
 const funcAsm = () => {
-	code.push('jump _ENDF_' + funcCnt + ' always');
-	code.push(readContent.funcName + ':');
+	code.push('jump __endf_' + funcCnt + ' always');
+	code.push('__' + readContent.funcName + ':');
 	curScope = readContent;
 };
 
@@ -43,14 +43,14 @@ const conditionAsm = () => {
 	let conMem = conditionMem[type];
 	
 	conMem.push(++conditionCnt);
-	let typeUpper = type.toUpperCase();
 	
-	code.push(
-		'_' + typeUpper + 'S_' + conditionCnt + ':',
-		'jump ' + '_' + typeUpper + '_' + conditionCnt + ' ' + readContent.condition[0] + ' ' + readContent.condition[1] + ' ' + readContent.condition[2],
-		'jump ' + '_' + typeUpper + 'N_' + conditionCnt + ' always',
-		'_' + typeUpper + '_' + conditionCnt + ':'
-	);
+	if(type == 'while') {
+		code.push('__' + type + 's_' + conditionCnt + ':');
+	}
+	
+	code = code.concat(readContent.operations);
+	
+	code.push('jump ' + '__' + type + 'n_' + conditionCnt + ' equal __condition_result false');
 	
 	curScope = readContent;
 };
@@ -59,7 +59,6 @@ const endAsm = () => {
 
 	if('conditionType' in curScope) {
 		let type = curScope.conditionType;
-		let typeUpper = type.toUpperCase();
 		
 		let conMem = conditionMem[type];
 		
@@ -67,27 +66,40 @@ const endAsm = () => {
 		conMem.splice(conMem.length - 1, 1);
 		
 		if(curScope.conditionType == 'while') {
-			code.push('jump ' + '_' + typeUpper + 'S_' + conditionCode + ' always');
+			code.push('jump ' + '__' + type + 's_' + conditionCode + ' always');
 		}
 		
-		code.push('_' + typeUpper + 'N_' + conditionCode + ':');
+		code.push('__' + type + 'n_' + conditionCode + ':');
 	} else if('funcName' in curScope) {
 		code.push(
-			'op sub _retCount _retCount 1',
-			'read _retAddr cell1 _retCount',
-			'set @counter _retAddr',
-			'_ENDF_' + funcCnt++ + ':'
+			'__returnf_' + funcCnt + ':',
+			'op sub __retCount __retCount 1',
+			'read __retAddr cell1 __retCount',
+			'set @counter __retAddr',
+			'__endf_' + funcCnt + ':'
 		);
+		
+		funcCnt++;
 	}
 	curScope = curScope.parent;
 };
 
 const breakAsm = () => {
 	let type = 'while';
-	let typeUpper = type.toUpperCase();
 	let conMem = conditionMem[type];
 	let conditionCode = conMem[conMem.length - 1];
-	code.push('jump ' + '_' + typeUpper + 'N_' + conditionCode + ' always');
+	code.push('jump ' + '__' + type + 'n_' + conditionCode + ' always');
+};
+
+const continueAsm = () => {
+	let type = 'while';
+	let conMem = conditionMem[type];
+	let conditionCode = conMem[conMem.length - 1];
+	code.push('jump ' + '__' + type + 's_' + conditionCode + ' always');
+};
+
+const returnAsm = () => {
+	code.push('jump ' + '__returnf_' + funcCnt + ' always');
 };
 
 const cmdAsm = () => {
@@ -96,10 +108,10 @@ const cmdAsm = () => {
 
 const callAsm = () => {
 	code.push(
-		'op add _retAddr @counter 3',
-		'write _retAddr cell1 _retCount',
-		'op add _retCount _retCount 1',
-		'jump ' + readContent.call + ' always'
+		'op add __retAddr @counter 3',
+		'write __retAddr cell1 __retCount',
+		'op add __retCount __retCount 1',
+		'jump __' + readContent.call + ' always'
 	);
 };
 
@@ -110,12 +122,14 @@ const varAsm = () => {
 
 const tokenFunc = {
 	'funcName' : funcAsm,
-	'condition' : conditionAsm,
+	'conditionType' : conditionAsm,
 	'call' : callAsm,
 	'varName' : varAsm,
 	'command' : cmdAsm,
 	'end' : endAsm,
-	'break' : breakAsm
+	'break' : breakAsm,
+	'continue': continueAsm,
+	'return': returnAsm
 };
 
 module.exports.assemble = assemble;

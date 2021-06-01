@@ -147,7 +147,7 @@ module.exports.parse = (tokenStr, varName) => {
 			let isNumberOrVar = parseFloat(token) || (!opDef[token] && !funcDef[token] && token != '(' && token != ')');
 			if(!isNumberOrVar) {
 			
-				let tempVar = '_TEMP_OP_' + ++vCnt;
+				let tempVar = '__temp_op' + ++vCnt;
 				
 				let nbParams = funcDef[token] || 2;
 				let opName = opDef[token] ? opDef[token].code : token;
@@ -170,7 +170,7 @@ module.exports.parse = (tokenStr, varName) => {
 	} else {
 		//Replace temp var with var assigned to
 		let lastIndex = instructions.length - 1;
-		instructions[lastIndex] = instructions[lastIndex].replace('_TEMP_OP_' + vCnt, varName);
+		instructions[lastIndex] = instructions[lastIndex].replace('__temp_op' + vCnt, varName);
 	}
 	
 	return instructions;
