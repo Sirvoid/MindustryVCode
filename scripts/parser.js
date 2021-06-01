@@ -1,4 +1,4 @@
-const opParser = require('operationParser');
+const opParser = require('./operationParser');
 
 let curLineI;
 let curLine;
@@ -77,9 +77,9 @@ const parseCondition = (type) => {
 		conditionType: type, 
 		operations:operations, 
 		content: [],
-		conditionCounter: conditionCounter++,
-		loopCounter: (type == 'while' ? loopCounter++ : loopCounter),
-		conditionBlock: ((type != 'elif' && type != 'else') ? ++conditionBlock : conditionBlock),
+		conditionCounter: ++conditionCounter,
+		loopCounter: (type == 'while' ? ++loopCounter : loopCounter),
+		conditionBlock: (type == 'if' ? ++conditionBlock : conditionBlock),
 		i:-1
 	};
 	
@@ -120,6 +120,11 @@ const parseFunc = () => {
 
 const parseEnd = () => {
 	curScope.content.push({end: 'end'});
+	
+	while(curScope.conditionType == 'elif' || curScope.conditionType == 'else') {
+		curScope = curScope.parent;
+	}
+	
 	curScope = curScope.parent;
 };
 

@@ -43,35 +43,32 @@ const conditionAsm = () => {
 	
 	if(type == 'while') {
 		code.push('__' + type + 's_' + loopCnt + ':');
-	}
-	
-	if(type == 'elif') {
+	} else if(type == 'elif') {
 		code.push('jump ' + '__blockn_' +  blockCnt + ' always');
 		code.push('__ifn_' + curScope.conditionCounter + ':');
-	}
-	
-	if(type == 'else') {
+	} else if(type == 'else') {
 		code.push('jump ' + '__blockn_' +  blockCnt + ' always');
 		code.push('__' + curScope.conditionType + 'n_' + curScope.conditionCounter + ':');
 	}
 	
-	code = code.concat(readContent.operations);
-	
-	code.push('jump ' + '__' + type + 'n_' + conditionCnt + ' equal __condition_result false');
+	if(type != 'else')  {
+		code = code.concat(readContent.operations);
+		code.push('jump ' + '__' + type + 'n_' + conditionCnt + ' equal __condition_result false');
+	}
 	
 	curScope = readContent;
 };
 
 const endAsm = () => {
-
+	
 	if('conditionType' in curScope) {
 		let type = curScope.conditionType;
 		
-		if(curScope.conditionType == 'while') {
+		if(type == 'while') {
 			code.push('jump ' + '__' + type + 's_' + curScope.loopCounter + ' always');
 			code.push('__' + type + 'n_' + curScope.conditionCounter + ':');
 		} else {
-			code.push('__' + type + 'n_' + curScope.conditionCounter + ':');
+			if(type != 'else') code.push('__' + type + 'n_' + curScope.conditionCounter + ':');
 			code.push('__blockn_' + curScope.conditionBlock + ':');
 		}
 		
@@ -86,6 +83,11 @@ const endAsm = () => {
 		
 		funcCnt++;
 	}
+	
+	while(curScope.conditionType == 'elif' || curScope.conditionType == 'else') {
+		curScope = curScope.parent;
+	}
+	
 	curScope = curScope.parent;
 };
 
