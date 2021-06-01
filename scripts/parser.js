@@ -14,6 +14,12 @@ const conditionCode = {
 	'!=': 'notEqual'
 };
 
+const getLineParam = (curLine) => {
+	let lineArr = curLine.split(' ');
+	lineArr.shift();
+	return lineArr.join(' ').trim();
+};
+
 const parse = (code) => {
 	
 	let ast = [{
@@ -44,7 +50,7 @@ const parse = (code) => {
 };
 
 const parseCmd = () => {
-	let command = curLine.replace('cmd ', '').trim();
+	let command = getLineParam(curLine);
 	curScope.content.push({command: command});
 };
 
@@ -57,7 +63,7 @@ const parseIf = () => {
 };
 
 const parseCondition = (type) => {
-	let condition = curLine.replace(type + ' ', '').trim();
+	let condition = getLineParam(curLine);
 	let curOp = '';
 	
 	for(let op in conditionCode) {
@@ -89,12 +95,12 @@ const parseBreak = () => {
 };
 
 const parseCall = () => {
-	let funcName = curLine.replace('call ', '').trim();
+	let funcName = getLineParam(curLine);
 	curScope.content.push({call: funcName});
 };
 
 const parseFunc = () => {
-	let funcName = curLine.replace('func ', '').trim();
+	let funcName = getLineParam(curLine);
 	if(funcName) {
 		let newScope = {
 			parent: curScope, 
@@ -114,7 +120,7 @@ const parseEnd = () => {
 
 const parseVar = () => {
 	let expressions = curLine.split('=');
-	let varName = expressions.shift();
+	let varName = expressions.shift().trim();
 	let mathExp = expressions.join('=');
 	
 	let operations = opParser.parse(mathExp, varName);
