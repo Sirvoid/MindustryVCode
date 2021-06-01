@@ -3,6 +3,9 @@ const opParser = require('operationParser');
 let curLineI;
 let curLine;
 let curScope;
+let conditionCounter;
+let conditionBlock;
+let loopCounter;
 
 const getLineParam = (curLine) => {
 	let lineArr = curLine.split(' ');
@@ -20,6 +23,9 @@ const parse = (code) => {
 	}];
 	
 	curScope = ast[0];
+	conditionCounter = 0;
+	conditionBlock = 0;
+	loopCounter = 0;
 	
 	for(let lineI in code) {
 		let line = code[lineI];
@@ -52,8 +58,16 @@ const parseIf = () => {
 	parseCondition('if');
 };
 
+const parseElif = () => {
+	parseCondition('elif');
+};
+
+const parseElse = () => {
+	parseCondition('else');
+};
+
 const parseCondition = (type) => {
-	let condition = getLineParam(curLine);
+	let condition = type == 'else' ? 'true' : getLineParam(curLine);
 	let curOp = '';
 	
 	let operations = opParser.parse(condition, '__condition_result');
@@ -63,6 +77,9 @@ const parseCondition = (type) => {
 		conditionType: type, 
 		operations:operations, 
 		content: [],
+		conditionCounter: conditionCounter++,
+		loopCounter: (type == 'while' ? loopCounter++ : loopCounter),
+		conditionBlock: ((type != 'elif' && type != 'else') ? ++conditionBlock : conditionBlock),
 		i:-1
 	};
 	
@@ -126,6 +143,8 @@ const tokenFunc = {
 	'cmd': parseCmd,
 	'call': parseCall,
 	'if': parseIf,
+	'elif': parseElif,
+	'else': parseElse,
 	'while': parseWhile,
 	'break': parseBreak,
 	'continue': parseContinue,

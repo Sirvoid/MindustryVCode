@@ -2,14 +2,11 @@ let code;
 let curScope;
 let readContent;
 let conditionMem;
-let conditionCnt;
 let funcCnt;
 
 const assemble = (ast) => {
 
 	curScope = ast[0];
-	conditionMem = {'if':[],'while':[]};
-	conditionCnt = 0;
 	funcCnt = 0;
 	code = [];
 	
@@ -40,12 +37,22 @@ const funcAsm = () => {
 
 const conditionAsm = () => {
 	let type = readContent.conditionType;
-	let conMem = conditionMem[type];
-	
-	conMem.push(++conditionCnt);
+	let conditionCnt = readContent.conditionCounter;
+	let blockCnt = readContent.conditionBlock;
+	let loopCnt = readContent.loopCounter;
 	
 	if(type == 'while') {
-		code.push('__' + type + 's_' + conditionCnt + ':');
+		code.push('__' + type + 's_' + loopCnt + ':');
+	}
+	
+	if(type == 'elif') {
+		code.push('jump ' + '__blockn_' +  blockCnt + ' always');
+		code.push('__ifn_' + curScope.conditionCounter + ':');
+	}
+	
+	if(type == 'else') {
+		code.push('jump ' + '__blockn_' +  blockCnt + ' always');
+		code.push('__' + curScope.conditionType + 'n_' + curScope.conditionCounter + ':');
 	}
 	
 	code = code.concat(readContent.operations);
@@ -60,16 +67,14 @@ const endAsm = () => {
 	if('conditionType' in curScope) {
 		let type = curScope.conditionType;
 		
-		let conMem = conditionMem[type];
-		
-		let conditionCode = conMem[conMem.length - 1];
-		conMem.splice(conMem.length - 1, 1);
-		
 		if(curScope.conditionType == 'while') {
-			code.push('jump ' + '__' + type + 's_' + conditionCode + ' always');
+			code.push('jump ' + '__' + type + 's_' + curScope.loopCounter + ' always');
+			code.push('__' + type + 'n_' + curScope.conditionCounter + ':');
+		} else {
+			code.push('__' + type + 'n_' + curScope.conditionCounter + ':');
+			code.push('__blockn_' + curScope.conditionBlock + ':');
 		}
 		
-		code.push('__' + type + 'n_' + conditionCode + ':');
 	} else if('funcName' in curScope) {
 		code.push(
 			'__returnf_' + funcCnt + ':',
@@ -86,16 +91,12 @@ const endAsm = () => {
 
 const breakAsm = () => {
 	let type = 'while';
-	let conMem = conditionMem[type];
-	let conditionCode = conMem[conMem.length - 1];
-	code.push('jump ' + '__' + type + 'n_' + conditionCode + ' always');
+	code.push('jump ' + '__' + type + 'n_' + curScope.conditionCounter + ' always');
 };
 
 const continueAsm = () => {
 	let type = 'while';
-	let conMem = conditionMem[type];
-	let conditionCode = conMem[conMem.length - 1];
-	code.push('jump ' + '__' + type + 's_' + conditionCode + ' always');
+	code.push('jump ' + '__' + type + 's_' + curScope.loopCounter + ' always');
 };
 
 const returnAsm = () => {
