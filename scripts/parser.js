@@ -38,11 +38,17 @@ const parse = (code) => {
 		if(token in tokenFunc) { 
 			tokenFunc[token]();
 		} else {
-			parseVar();
+			if(!checkComment()) {
+				parseVar();
+			}
 		}
 	}
 	
 	return ast;
+};
+
+const checkComment = () => {
+	return curLine[0] == '#';
 };
 
 const parseCmd = () => {
