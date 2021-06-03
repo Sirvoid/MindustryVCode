@@ -3,11 +3,13 @@ let curScope;
 let readContent;
 let conditionMem;
 let funcCnt;
+let waitCnt;
 
 const assemble = (ast) => {
 
 	curScope = ast[0];
 	funcCnt = 0;
+	waitCnt = 0;
 	code = [];
 	
 	do {
@@ -105,6 +107,21 @@ const returnAsm = () => {
 	code.push('jump ' + '__returnf_' + funcCnt + ' always');
 };
 
+const waitAsm = () => {
+	let waitTime = readContent.wait;
+	
+	let waitFlag = '___wait' + waitCnt;
+	let waitEnd = '___waitEnd' + waitCnt;
+	
+	code.push(
+		'op add ' + waitEnd + ' @time ' + waitTime,
+		waitFlag + ':',
+		'jump ' + waitFlag + ' lessThan @time ' + waitEnd
+	);
+	
+	waitCnt++;
+};
+
 const cmdAsm = () => {
 	code.push(readContent.command);
 };
@@ -132,7 +149,8 @@ const tokenFunc = {
 	'end' : endAsm,
 	'break' : breakAsm,
 	'continue': continueAsm,
-	'return': returnAsm
+	'return': returnAsm,
+	'wait': waitAsm
 };
 
 module.exports.assemble = assemble;

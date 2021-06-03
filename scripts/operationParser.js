@@ -5,12 +5,32 @@ module.exports.parse = (tokenStr, varName) => {
 	let opStack = []; //operator stack
 	let output = []; //output stack
 	let instructions = []; //Final instructions
+	let arraysInstructions = [];
 	let vCnt = 0; //Temp variables count
 
 	let tokenToAdd = ''; //Current token generated
 	let addToken = () => {
+	
+		if(tokenToAdd.includes('[') && !tokenToAdd.includes('"')) {
+			
+			let array = parseArray(tokenToAdd);
+			
+			arraysInstructions.push('read ' + tokenToAdd + ' ' + array.name + ' ' + array.index);
+		}
+	
 		tokenArr.push(tokenToAdd);
 		tokenToAdd = '';
+	};
+	
+	let parseArray = (token) => {
+		let arrayParams = token.split('[');
+			
+		let index = arrayParams[1];
+		index = index.slice(0, index.length - 1);
+		
+		let arrayName = arrayParams[0];
+		
+		return {name: arrayName, index: index};
 	};
 
 	//Operators definition
@@ -173,5 +193,10 @@ module.exports.parse = (tokenStr, varName) => {
 		instructions[lastIndex] = instructions[lastIndex].replace('__temp_op' + vCnt, varName);
 	}
 	
-	return instructions;
+	if(varName.includes('[')) {
+		let array = parseArray(varName);
+		instructions.push('write ' + varName + ' ' + array.name + ' ' + array.index);
+	}
+	
+	return arraysInstructions.concat(instructions);
 };

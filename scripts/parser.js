@@ -105,6 +105,11 @@ const parseReturn = () => {
 	curScope.content.push({'return': 'return'});
 };
 
+const parseWait = () => {
+	let time = getLineParam(curLine);
+	curScope.content.push({wait: time});
+};
+
 const parseCall = () => {
 	let funcName = getLineParam(curLine);
 	curScope.content.push({call: funcName});
@@ -159,7 +164,8 @@ const tokenFunc = {
 	'while': parseWhile,
 	'break': parseBreak,
 	'continue': parseContinue,
-	'return': parseReturn
+	'return': parseReturn,
+	'wait': parseWait
 };
 
 module.exports.parse = parse;
