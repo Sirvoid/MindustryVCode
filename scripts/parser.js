@@ -1,4 +1,4 @@
-const opParser = require('./operationParser');
+const opParser = require('operationParser');
 
 let curLineI;
 let curLine;
