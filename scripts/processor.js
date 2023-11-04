@@ -4,7 +4,7 @@ global.override.block(LogicBlock, {
 	buildConfiguration(t){
 		this.super$buildConfiguration(t);
 		t.row();
-		t.button(Icon.upload, Styles.clearTransi, () => {
+		t.button(Icon.upload, Styles.cleari, () => {
 
 			const dialog = new BaseDialog('VCode Compiler');
 			const input = new TextArea('');

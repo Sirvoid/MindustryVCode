@@ -4,7 +4,7 @@
 	"author": "Sirvoid",
 	"description": "Compiler for a mindustry programming language.\nTokens:\nfunc,call,if,elif,else,while,break,continue,return,end,wait,cmd\nSee example: https://pastebin.com/3vTgba6k",
 	"version": "0.5.0",
-	"minGameVersion": 108,
+	"minGameVersion": 136,
 	"dependencies": ["override-lib"],
 	"hidden": true
 }
